@@ -12,14 +12,20 @@ Tall things (bookcases, bushes, chimneys) have to be dodged. Low things (footsto
 
 ## Running it
 
-It's a single `index.html` with no build step. Open it in a browser, or serve the folder:
+It's a static page with no build step: `index.html`, `style.css` and `game.js`. Serve the folder and open it in a browser:
 
 ```sh
 python3 -m http.server
 ```
 
-To play it on your phone, turn on GitHub Pages for the repo (Settings, then Pages, deploy from the `main` branch root) and open the Pages URL.
+It's live at https://zoomies.interstellarai.net, served on Railway by Caddy (see `Dockerfile` and `Caddyfile`, which also set the security headers and the Content Security Policy).
+
+To smoke-test it in headless Chrome (Node 22 or newer, no dependencies):
+
+```sh
+node tests/smoke.mjs http://localhost:8000/ /tmp/zoomies-shots
+```
 
 ## Tech
 
-Three.js r128 is loaded from cdnjs. All sound (music, crunches, meows) is synthesised live with the Web Audio API, so there are no asset files.
+Three.js r128 is loaded from cdnjs, pinned with a Subresource Integrity hash. All sound (music, crunches, meows) is synthesised live with the Web Audio API, so there are no asset files.
