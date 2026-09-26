@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    # Builds the real Caddy image (so the CSP and headers are the production
+    # ones) and loads the game in headless Chrome: fails on uncaught JS
+    # errors, console errors, CSP violations or a missing WebGL canvas.
+    name: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+      - name: Build and start the Caddy image
+        run: |
+          docker build -t zoomies .
+          docker run -d --name zoomies -e PORT=8080 -p 8080:8080 zoomies
+          for i in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:8080/ && break; sleep 1; done
+          curl -fsSI http://localhost:8080/ | tee headers.txt
+          grep -qi '^content-security-policy:' headers.txt
+      - name: Headless Chrome smoke test
+        env:
+          CHROME_BIN: google-chrome
+        run: node tests/smoke.mjs http://localhost:8080/ screenshots
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+
+  unsafe-change-tests:
+    # The unsafe-change check itself runs from the base branch
+    # (pull_request_target), so a PR changing it is only tested here.
+    name: unsafe-change checker tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Unit tests (system python3 + PyYAML, as the check uses)
+        run: python3 -m unittest discover -s .github/unsafe-change
