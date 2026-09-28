@@ -12,18 +12,18 @@ Tall things (bookcases, bushes, chimneys) have to be dodged. Low things (footsto
 
 ## Running it
 
-It's a static page with no build step: `index.html`, `style.css` and `game.js`. Serve the folder and open it in a browser:
+It's a static page with no build step: `public/index.html`, `public/style.css` and `public/game.js`. Serve the `public` folder and open it in a browser:
 
 ```sh
-python3 -m http.server
+node tests/serve.mjs public 8000   # or: python3 -m http.server -d public 8000
 ```
 
-It's live at https://zoomies.interstellarai.net, served on Railway by Caddy (see `Dockerfile` and `Caddyfile`, which also set the security headers and the Content Security Policy).
+It's live at https://zoomies.interstellarai.net, served by Cloudflare Pages from the `public` folder. `public/_headers` sets the security headers and the Content Security Policy, and `tests/serve.mjs` applies the same file locally.
 
 To smoke-test it in headless Chrome (Node 22 or newer, no dependencies):
 
 ```sh
-node tests/smoke.mjs http://localhost:8000/ /tmp/zoomies-shots
+node tests/smoke.mjs http://127.0.0.1:8000/ /tmp/zoomies-shots
 ```
 
 ## Tech

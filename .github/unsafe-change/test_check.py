@@ -82,7 +82,8 @@ class Fails(unittest.TestCase):
                      "docker-compose.yml", ".railway/config.json", "railway.toml", "fly.toml", "vercel.json",
                      "worker/wrangler.toml", "Procfile", "ops/sql/create-role.sql", "scripts/deploy-prod.sh",
                      ".env", "backend/.env.production", "build.rs", "CLAUDE.md", ".archon/workflows/x.yaml",
-                     "app/build.gradle.kts", "Caddyfile", "tests/smoke.mjs"]:
+                     "app/build.gradle.kts", "public/_headers", "_redirects", "tests/smoke.mjs",
+                     "tests/serve.mjs"]:
             self.assertFlags([f(path, "modified", added("x"))], needle=path)
 
     def test_removing_or_renaming_away_from_a_denied_path_fails(self):

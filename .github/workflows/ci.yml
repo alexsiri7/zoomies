@@ -14,9 +14,10 @@ concurrency:
 
 jobs:
   smoke:
-    # Builds the real Caddy image (so the CSP and headers are the production
-    # ones) and loads the game in headless Chrome: fails on uncaught JS
-    # errors, console errors, CSP violations or a missing WebGL canvas.
+    # Serves public/ with the Cloudflare Pages `_headers` rules applied
+    # (tests/serve.mjs), so the CSP and headers are the production ones, and
+    # loads the game in headless Chrome: fails on uncaught JS errors, console
+    # errors, CSP violations or a missing WebGL canvas.
     name: smoke
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -27,17 +28,22 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
-      - name: Build and start the Caddy image
+      - name: Serve public/ with the _headers rules
         run: |
-          docker build -t zoomies .
-          docker run -d --name zoomies -e PORT=8080 -p 8080:8080 zoomies
-          for i in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:8080/ && break; sleep 1; done
-          curl -fsSI http://localhost:8080/ | tee headers.txt
-          grep -qi '^content-security-policy:' headers.txt
+          nohup node tests/serve.mjs public 8080 > serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8080/ && break; sleep 1; done
+          curl -fsSI http://127.0.0.1:8080/ | tee headers.txt
+          # The served CSP must be exactly the one in public/_headers.
+          want=$(grep -i '^ *content-security-policy:' public/_headers | sed 's/^ *//')
+          grep -qiF "$want" headers.txt
+          # Nothing outside public/ and no Pages config file is served.
+          for p in _headers CLAUDE.md tests/smoke.mjs; do
+            test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080/$p")" = 404
+          done
       - name: Headless Chrome smoke test
         env:
           CHROME_BIN: google-chrome
-        run: node tests/smoke.mjs http://localhost:8080/ screenshots
+        run: node tests/smoke.mjs http://127.0.0.1:8080/ screenshots
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
