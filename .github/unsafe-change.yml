@@ -47,8 +47,12 @@ deny_paths:
 
 # Per-repo additions to deny_paths.
 extra_deny_paths:
-  - "Caddyfile"            # production headers, CSP and serving config
+  - "_headers"             # Cloudflare Pages production headers and CSP (public/_headers)
+  - "_redirects"           # Cloudflare Pages redirects
+  - "_routes.json"         # Cloudflare Pages Functions routing
+  - "functions/*"          # Cloudflare Pages Functions (server-side code, deployed from the repo root)
   - "tests/smoke.mjs"      # the CI gate that catches JS errors and CSP violations
+  - "tests/serve.mjs"      # applies _headers for that gate
 
 # 2. Secrets, credential and auth handling: a path containing any of these
 #    words (case-insensitive substring) fails.
