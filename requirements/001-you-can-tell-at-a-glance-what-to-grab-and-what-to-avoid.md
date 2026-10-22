@@ -1,8 +1,8 @@
 ---
 created: '2026-10-22'
-github_issue: null
+github_issue: 4
 id: '001'
-status: draft
+status: idea
 title: You can tell at a glance what to grab and what to avoid
 updated: '2026-10-22'
 ---
@@ -22,4 +22,4 @@ Everything you should collect looks and moves clearly differently from everythin
 
 ## Issues
 
-_None yet._
+- #4 — Make collectables and obstacles clearly different in colour and motion
