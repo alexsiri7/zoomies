@@ -2,8 +2,9 @@
 // Usage: node tests/style.mjs [path-to-three.min.js]
 // Builds every collectable, obstacle and finish from public/things.js with the real
 // Three.js r128 (fetched from the SRI-pinned URL in index.html, or read from the
-// given path) and fails unless collectables alone glow warm gold, obstacles are
-// cool or dark and never glow, and only low obstacles carry the hurdle marker.
+// given path) and fails unless collectables alone glow warm gold and bob and spin,
+// obstacles are cool or dark, never glow and stay still, and only low obstacles
+// carry the hurdle marker.
 import vm from 'node:vm';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -23,7 +24,7 @@ ctx.self = ctx.window = ctx;
 vm.createContext(ctx);
 vm.runInContext(three.toString(), ctx);
 vm.runInContext(readFileSync(new URL('things.js', pub), 'utf8'), ctx);
-const { LEVELS, kibble, bowl } = ctx.ZoomiesThings;
+const { LEVELS, kibble, bowl, bob } = ctx.ZoomiesThings;
 
 // Hue in degrees, saturation and lightness in 0..1.
 const PICKUP = { hueMin: 25, hueMax: 60, satMin: 0.8, lightMin: 0.5 };
@@ -35,6 +36,12 @@ const hsl = (c) => { const o = {}; c.getHSL(o); return { h: o.h * 360, s: o.s, l
 const inPickupBand = (c) => { const { h, s, l } = hsl(c); return h >= PICKUP.hueMin && h <= PICKUP.hueMax && s >= PICKUP.satMin && l >= PICKUP.lightMin; };
 const warmBright = (c) => { const { h, s, l } = hsl(c); return (h >= WARM_BRIGHT.hueFrom || h <= WARM_BRIGHT.hueTo) && s >= WARM_BRIGHT.satMin && l >= WARM_BRIGHT.lightMin; };
 const glows = (m) => !!m.emissive && m.emissive.getHex() !== 0;
+const bobs = (g) => {
+  if (!g.userData.bob) return false;
+  const at = (t) => { bob(g, 0.1, t); return [g.rotation.y, g.position.y]; };
+  const [r0, y0] = at(0), [r1, y1] = at(0.3);
+  return r1 !== r0 && y1 !== y0;
+};
 const hasHurdle = (g) => { let found = false; g.traverse((o) => { if (o.userData.marker === 'hurdle') found = true; }); return found; };
 
 const failures = [];
@@ -55,13 +62,15 @@ function check(name, build, rules) {
 
 const collectable = {
   material: (m) => !glows(m) ? 'does not glow' : !inPickupBand(m.color) ? 'is outside the pickup colour band' : null,
+  group: (g) => !bobs(g) ? 'does not bob and spin' : null,
 };
 const obstacle = (isLow) => ({
   material: (m) => glows(m) ? 'glows' : m.type === 'MeshBasicMaterial' ? 'is unlit (reads as glowing)' : warmBright(m.color) ? 'is warm and bright' : null,
-  group: (g) => isLow && !hasHurdle(g) ? 'low obstacle has no hurdle' : !isLow && hasHurdle(g) ? 'tall obstacle has a hurdle' : null,
+  group: (g) => g.userData.bob ? 'bobs' : isLow && !hasHurdle(g) ? 'low obstacle has no hurdle' : !isLow && hasHurdle(g) ? 'tall obstacle has a hurdle' : null,
 });
 const finish = {
   material: (m) => glows(m) ? 'glows' : inPickupBand(m.color) ? 'uses the pickup colour band' : null,
+  group: (g) => g.userData.bob ? 'bobs' : null,
 };
 
 check('kibble', kibble, collectable);

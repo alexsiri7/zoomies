@@ -4,7 +4,7 @@ const LEVEL_LEN=650;
 const MAX_LIVES=9;
 const reduceMotion=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=id=>document.getElementById(id);
-const {lam,box,cyl,LEVELS,kibble,bowl}=window.ZoomiesThings;
+const {lam,box,cyl,LEVELS,kibble,bowl,bob}=window.ZoomiesThings;
 
 let best=0;
 try{best=parseInt(localStorage.getItem('zoomies-best')||'0',10)||0}catch(e){}
@@ -273,8 +273,8 @@ function add(type,sub,lane,z){
   const L=LEVELS[levelIdx%LEVELS.length];let m;
   if(type==='tall')m=L.tall[sub][0]();
   else if(type==='low')m=L.low[sub][0]();
-  else if(type==='kibble'){m=kibble();m.position.y=0.9;}
-  else if(type==='bowl'){m=bowl();m.position.y=0.3;}
+  else if(type==='kibble')m=kibble();
+  else if(type==='bowl')m=bowl();
   else m=L.finish();
   m.position.x=lane===null?0:LANES[lane];m.position.z=z;scene.add(m);
   things.push({type,sub,mesh:m});
@@ -420,8 +420,7 @@ function frame(now){
   for(let i=things.length-1;i>=0;i--){
     const o=things[i],m=o.mesh;
     m.position.z+=d;
-    if(o.type==='kibble'){m.rotation.y+=dt*3;m.position.y=0.9+Math.sin(t*4+m.position.z)*0.1;}
-    else if(o.type==='bowl'){m.rotation.y+=dt*1.5;m.position.y=0.3+Math.sin(t*4+m.position.z)*0.08;}
+    if(m.userData.bob)bob(m,dt,t);
     if(state==='play'){
       const dz=Math.abs(m.position.z),dx=Math.abs(m.position.x-cat.position.x);
       if(o.type==='finish'){

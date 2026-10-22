@@ -26,7 +26,7 @@ To smoke-test it in headless Chrome (Node 22 or newer, no dependencies):
 node tests/smoke.mjs http://127.0.0.1:8000/ /tmp/zoomies-shots
 ```
 
-To check that only pickups glow gold and only low obstacles carry the hurdle: `node tests/style.mjs`.
+To check that only pickups glow gold and bob, and only low obstacles carry the hurdle: `node tests/style.mjs`.
 
 ## Tech
 

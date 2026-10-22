@@ -75,9 +75,12 @@ const kibbleGeo=new THREE.DodecahedronGeometry(0.13,0);
 const pickupMat=c=>lam(c,{emissive:c,emissiveIntensity:0.45});
 const PICKUP_COLORS=[0xffb81c,0xffcc33,0xffa31a];
 const kibbleMats=PICKUP_COLORS.map(pickupMat);
-function kibble(){const g=new THREE.Group();[[-0.14,0,0],[0.14,0.02,0.05],[0,0.2,-0.04]].forEach((p,i)=>{const k=new THREE.Mesh(kibbleGeo,kibbleMats[i]);k.position.set(...p);g.add(k);});return g;}
+// Collectables, and only collectables, bob and spin (tests/style.mjs enforces this too).
+const bobbing=(g,y,amp,spin)=>{g.userData.bob={y,amp,spin};g.position.y=y;return g;};
+function bob(m,dt,t){const b=m.userData.bob;m.rotation.y+=dt*b.spin;m.position.y=b.y+Math.sin(t*4+m.position.z)*b.amp;}
+function kibble(){const g=new THREE.Group();[[-0.14,0,0],[0.14,0.02,0.05],[0,0.2,-0.04]].forEach((p,i)=>{const k=new THREE.Mesh(kibbleGeo,kibbleMats[i]);k.position.set(...p);g.add(k);});return bobbing(g,0.9,0.1,3);}
 function bowl(){const g=new THREE.Group();g.add(cyl(0.5,0.35,0.3,12,pickupMat(0xffcc33)));
-  for(let i=0;i<9;i++){const k=new THREE.Mesh(kibbleGeo,kibbleMats[i%3]);k.position.set(Math.cos(i*2.1)*0.25*(i%3/2),0.18+(i%3)*0.06,Math.sin(i*2.1)*0.25*(i%3/2));g.add(k);}return g;}
+  for(let i=0;i<9;i++){const k=new THREE.Mesh(kibbleGeo,kibbleMats[i%3]);k.position.set(Math.cos(i*2.1)*0.25*(i%3/2),0.18+(i%3)*0.06,Math.sin(i*2.1)*0.25*(i%3/2));g.add(k);}return bobbing(g,0.3,0.08,1.5);}
 
-window.ZoomiesThings={lam,box,cyl,LEVELS,kibble,bowl};
+window.ZoomiesThings={lam,box,cyl,LEVELS,kibble,bowl,bob};
 })();
