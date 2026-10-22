@@ -8,11 +8,11 @@ Run through the hallway, the garden and the rooftops at night, eating kibble and
 
 Swipe left or right to change lanes, and swipe up or tap to jump. On a keyboard, use the arrow keys (or A/D/W and Space).
 
-Tall things (bookcases, bushes, chimneys) have to be dodged. Low things (footstools, hedgehogs, pigeons) can be jumped over. Kibble is worth 10 points, and a full food bowl is worth 25 plus 5 kibble. Finishing a level gives a 100-point bonus, and every round of the three levels gets faster.
+Tall things (bookcases, bushes, chimneys) have to be dodged. Low things (footstools, hedgehogs, pigeons) can be jumped over. Kibble glows gold and spins, and low things have a pale hurdle bar over them. Kibble is worth 10 points, and a full food bowl is worth 25 plus 5 kibble. Finishing a level gives a 100-point bonus, and every round of the three levels gets faster.
 
 ## Running it
 
-It's a static page with no build step: `public/index.html`, `public/style.css` and `public/game.js`. Serve the `public` folder and open it in a browser:
+It's a static page with no build step: `public/index.html`, `public/style.css`, `public/things.js` and `public/game.js`. Serve the `public` folder and open it in a browser:
 
 ```sh
 node tests/serve.mjs public 8000   # or: python3 -m http.server -d public 8000
@@ -25,6 +25,8 @@ To smoke-test it in headless Chrome (Node 22 or newer, no dependencies):
 ```sh
 node tests/smoke.mjs http://127.0.0.1:8000/ /tmp/zoomies-shots
 ```
+
+To check that only pickups glow gold and only low obstacles carry the hurdle: `node tests/style.mjs`.
 
 ## Tech
 
