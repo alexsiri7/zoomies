@@ -31,7 +31,7 @@ node tests/smoke.mjs http://127.0.0.1:8000/ /tmp/zoomies-shots
 node tests/style.mjs   # optionally with a local copy of three.min.js r128 as the argument
 ```
 
-The test loads the page in headless Chrome at phone size, clicks Play and saves `menu.png` and `playing.png`. It fails on uncaught JS errors, `console.error`, CSP violations or a missing WebGL canvas. `tests/style.mjs` builds every collectable, obstacle and finish from `public/things.js` and checks their materials, motion and markers. CI (`.github/workflows/ci.yml`) runs both, the smoke test against `tests/serve.mjs`, which applies `public/_headers`, so the production CSP is exercised. For any UI or gameplay change, look at the screenshots, not just the exit code.
+The test loads the page in headless Chrome at phone size, clicks Play and saves `menu.png` and `playing.png`. It fails on uncaught JS errors, `console.error`, CSP violations, a missing WebGL canvas, or a spawned collectable that does not bob and spin (it wraps the `kibble`/`bowl` builders on `window.ZoomiesThings` to find them). `tests/style.mjs` builds every collectable, obstacle and finish from `public/things.js` and checks their materials, motion and markers. CI (`.github/workflows/ci.yml`) runs both, the smoke test against `tests/serve.mjs`, which applies `public/_headers`, so the production CSP is exercised. For any UI or gameplay change, look at the screenshots, not just the exit code.
 
 ## Invariants
 
@@ -41,5 +41,5 @@ The test loads the page in headless Chrome at phone size, clicks Play and saves 
 - All sound is synthesised live with the Web Audio API. Add no audio, image or model asset files.
 - Keep the CSP working without `'unsafe-inline'`: no inline `<script>`, no inline `<style>` or `style="..."` attributes, and no `on*=` handlers in HTML. Setting `element.style.x` from JS is fine. A new external origin needs a matching CSP change in `public/_headers`.
 - Controls are mobile-first: swipe left/right to change lanes, swipe up or tap to jump, plus the keyboard (arrows, A/D/W, Space). Keep both working, and keep `touch-action: none` on the stage.
-- Collectables and obstacles must read apart at a glance, without relying on hue: collectables use `pickupMat` (warm gold that glows) and bob and spin through `bobbing`/`bob`; obstacles are cool or dark, never glow, never use `MeshBasicMaterial` and stay still; every low obstacle carries the `hurdle` marker and no tall one does. `tests/style.mjs` enforces the materials, the motion and the marker.
+- Collectables and obstacles must read apart at a glance, without relying on hue: collectables use `pickupMat` (warm gold that glows) and bob and spin through `bobbing`/`bob`; obstacles are cool or dark, never glow, never use `MeshBasicMaterial` and stay still; every low obstacle carries the `hurdle` marker and no tall one does. `tests/style.mjs` enforces the materials, the motion and the marker; `tests/smoke.mjs` checks the motion in the running game.
 - The best score is stored in `localStorage` under `zoomies-best`. Keep reads and writes in try/catch.

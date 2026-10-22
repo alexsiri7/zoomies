@@ -1,6 +1,7 @@
 // Headless Chrome smoke test with no dependencies (Node >= 22 for the global WebSocket).
 // Usage: node tests/smoke.mjs <url> [screenshot-dir]
-// Fails on uncaught JS errors, console errors, CSP violations, or a missing WebGL canvas.
+// Fails on uncaught JS errors, console errors, CSP violations, a missing WebGL canvas,
+// or collectables that do not bob and spin in the running game.
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -58,6 +59,11 @@ try {
   // Record CSP violations from inside the page; CDP console/log events do not always carry them.
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `window.__csp = [];
     document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(e.violatedDirective + ' blocked ' + (e.blockedURI || 'inline')));` });
+  // Record every collectable the game spawns by wrapping the builders things.js publishes.
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: `window.__pickups = []; let zt;
+    Object.defineProperty(window, 'ZoomiesThings', { configurable: true, get: () => zt, set(v) {
+      for (const k of ['kibble', 'bowl']) { const build = v[k]; v[k] = (...a) => { const m = build(...a); window.__pickups.push(m); return m; }; }
+      zt = v; } });` });
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await send('Page.navigate', { url });
   await sleep(3000);
@@ -79,6 +85,20 @@ try {
   await evalJs(`document.getElementById('playBtn') && document.getElementById('playBtn').click()`);
   await sleep(2500);
   await shot('playing.png');
+
+  // Rows spawn at random, so wait for a collectable still in the scene, then watch it for 300 ms.
+  const pose = (i) => evalJs(`(m => ({ live: !!m.parent, y: m.position.y, r: m.rotation.y }))(window.__pickups[${i}])`);
+  let moves = null;
+  for (let tries = 0; tries < 40 && moves === null; tries++) {
+    const i = await evalJs('window.__pickups.findIndex((m) => m.parent)');
+    if (i < 0) { await sleep(500); continue; }
+    const a = await pose(i);
+    await sleep(300);
+    const b = await pose(i);
+    if (b.live) moves = a.y !== b.y && a.r !== b.r;
+  }
+  if (moves === null) problems.push('no collectable spawned within 20 s');
+  else if (!moves) problems.push('collectables do not bob and spin in the game');
 
   const csp = (await evalJs('window.__csp')) || [];
   for (const v of csp) problems.push(`CSP violation: ${v}`);

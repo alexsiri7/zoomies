@@ -17,8 +17,9 @@ jobs:
     # Serves public/ with the Cloudflare Pages `_headers` rules applied
     # (tests/serve.mjs), so the CSP and headers are the production ones, and
     # loads the game in headless Chrome: fails on uncaught JS errors, console
-    # errors, CSP violations or a missing WebGL canvas. First, tests/style.mjs
-    # checks that only collectables glow gold and only low obstacles carry the hurdle.
+    # errors, CSP violations, a missing WebGL canvas or collectables that stay
+    # still. First, tests/style.mjs checks that only collectables glow gold and
+    # bob, and only low obstacles carry the hurdle.
     name: smoke
     runs-on: ubuntu-latest
     timeout-minutes: 10
