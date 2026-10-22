@@ -14,7 +14,11 @@ body{background:#f1d9bb;color:var(--ink);overflow:hidden;font-family:Nunito,syst
 #hud{position:relative;z-index:2;padding:14px 18px;pointer-events:none;color:var(--cream);text-shadow:0 2px 0 var(--ink),0 3px 10px rgba(43,26,18,.45)}
 #score{font-family:Bungee,Impact,sans-serif;font-size:clamp(28px,8vw,44px);line-height:1}
 #lives{font-size:17px;letter-spacing:1px;margin-top:6px;color:var(--heart)}
-#kibble{font-weight:800;font-size:15px;margin-top:2px}
+#kibble{font-weight:800;font-size:15px;margin-top:2px;transform-origin:left center}
+#kibble.pop{animation:pop .35s ease-out}
+@keyframes pop{0%{color:#ffcc33;transform:scale(1.35)}100%{color:var(--cream);transform:none}}
+@keyframes popc{0%{color:#ffcc33}100%{color:var(--cream)}}
+@media (prefers-reduced-motion: reduce){#kibble.pop{animation-name:popc}}
 #best{opacity:.85;font-weight:800;font-size:13px;margin-top:2px}
 #progress{position:fixed;z-index:2;top:calc(env(safe-area-inset-top,0px) + 16px);left:50%;transform:translateX(-50%);width:min(34vw,220px);text-align:center;pointer-events:none;color:var(--cream);font-weight:800;font-size:13px;text-shadow:0 2px 0 var(--ink)}
 #bar{height:8px;border-radius:4px;background:rgba(43,26,18,.4);margin-top:5px;overflow:hidden}
