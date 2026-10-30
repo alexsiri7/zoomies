@@ -2,9 +2,9 @@
 created: '2026-10-22'
 github_issue: 4
 id: '001'
-status: idea
+status: done
 title: You can tell at a glance what to grab and what to avoid
-updated: '2026-10-22'
+updated: '2026-10-30'
 ---
 
 ## Why
