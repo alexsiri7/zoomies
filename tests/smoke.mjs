@@ -13,23 +13,28 @@ const chromeBin = process.env.CHROME_BIN || 'google-chrome';
 const port = 9300 + Math.floor(Math.random() * 500);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+let chromeStderr = '';
+let chromeExit = null;
 const chrome = spawn(chromeBin, [
   '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${mkdtempSync(join(tmpdir(), 'zoomies-'))}`,
   '--no-first-run', '--no-default-browser-check', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
   '--autoplay-policy=no-user-gesture-required', '--window-size=390,844', 'about:blank',
-], { stdio: 'ignore' });
+], { stdio: ['ignore', 'ignore', 'pipe'] });
+chrome.stderr.on('data', (d) => { chromeStderr += d; });
+chrome.on('exit', (code, signal) => { chromeExit = { code, signal }; });
 
 let ws;
 try {
   let target;
-  for (let i = 0; i < 50 && !target; i++) {
+  // CI runners vary widely in how long Chrome takes to open its DevTools port.
+  for (let i = 0; i < 150 && !target && !chromeExit; i++) {
     await sleep(200);
     try {
       const list = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
       target = list.find((t) => t.type === 'page');
     } catch {}
   }
-  if (!target) throw new Error('Chrome did not start');
+  if (!target) throw new Error(`Chrome did not start${chromeExit ? ` (exited ${JSON.stringify(chromeExit)})` : ''}`);
 
   ws = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise((r, j) => { ws.onopen = r; ws.onerror = j; });
@@ -114,6 +119,7 @@ try {
   }
 } catch (e) {
   console.error('FAIL:', e.message);
+  if (chromeStderr) console.error('--- chrome stderr ---\n' + chromeStderr);
   process.exitCode = 1;
 } finally {
   try { ws && ws.close(); } catch {}
